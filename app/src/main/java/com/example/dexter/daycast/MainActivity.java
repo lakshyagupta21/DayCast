@@ -7,11 +7,14 @@ import android.database.sqlite.SQLiteDatabase;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -43,18 +46,38 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     ImageView icon;
     SwipeRefreshLayout swipeRefreshLayout;
     Toolbar toolbar ;
+    Button searchButton;
+    EditText searchText;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main2);
+
+        //Custom toolbar declaration
         toolbar = (Toolbar) findViewById(R.id.app_bar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+
+        //Shared preference initialized
         SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
         SharedPreferences.Editor editor = pref.edit();
         city_selected = pref.getString("city","jaipur");
         context = MainActivity.this;
         findIds();
+        searchButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String citySearch = searchText.getText().toString();
+                Log.d("city",citySearch);
+                SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+                SharedPreferences.Editor editor = pref.edit();
+                editor.putString("city",citySearch);
+                editor.commit();
+            }
+        });
         getFromDb();
+
+        //Checking weather the app in running first time or not
         if(weatherItem == null){
             loadFirstTime();
         }
@@ -78,6 +101,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         }
     }
 
+    //Setting up Database
     private void getFromDb() {
         DatabaseRetrieval dbInteraction = new DatabaseRetrieval(context,city_selected);
         SQLiteDatabase db = dbInteraction.getWritableDatabase();
@@ -87,6 +111,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         dbInteraction.close();
     }
 
+    //Declaring XML variables to Java
     public void findIds(){
         city = (TextView)findViewById(R.id.city_field);
         condition = (TextView)findViewById(R.id.updated_field);
@@ -97,6 +122,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         recommend = (TextView)findViewById(R.id.tvrecommend);
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshLayout);
         swipeRefreshLayout.setOnRefreshListener(MainActivity.this);
+        searchButton = (Button) findViewById(R.id.searchButton);
+        searchText = (EditText) findViewById(R.id.city_search);
     }
     public void refreshData(WeatherItem result) {
         city.setText("City : "+result.getCity_name());
@@ -293,5 +320,14 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         });
         dialog.show();
     }
+
+    /*public void searchButton(View view){
+        String citySearch = searchText.getText().toString();
+        Log.d("city",citySearch);
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putString("city",citySearch);
+        editor.commit();
+    }*/
 
 }
